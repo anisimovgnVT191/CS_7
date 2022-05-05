@@ -1,5 +1,6 @@
 package com.example.view
 
+import com.example.controller.EmailController
 import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Pos
 import javafx.scene.Parent
@@ -11,6 +12,7 @@ class SendMessageView: View("SendMessageView") {
     private val themeObservable = SimpleStringProperty()
     private val messageObservable = SimpleStringProperty()
     private val attachmentsObservable = SimpleStringProperty()
+    private val controller: EmailController by inject()
 
     init {
         with(root) {
@@ -24,13 +26,12 @@ class SendMessageView: View("SendMessageView") {
                 useMaxWidth = true
                 text("Тема")
                 textfield(themeObservable) {
-                    alignment = Pos.CENTER_RIGHT
+
                 }
             }
             hbox {
                 text("Сообщение")
                 textfield(messageObservable) {
-                    alignment = Pos.CENTER_RIGHT
                 }
             }
             hbox {
@@ -40,7 +41,16 @@ class SendMessageView: View("SendMessageView") {
             }
             button("Отправить") {
                 useMaxSize = true
-                this.cancelButtonProperty()
+
+                onLeftClick {
+                    runAsyncWithProgress {
+                        controller.sendMessage(
+                            email = userObservable.value,
+                            subject = themeObservable.value,
+                            content = messageObservable.value
+                        )
+                    }
+                }
             }
         }
     }
