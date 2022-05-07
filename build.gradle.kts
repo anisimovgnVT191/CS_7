@@ -27,6 +27,7 @@ dependencies {
     testImplementation(kotlin("test-junit"))
     implementation("com.sun.mail:javax.mail:1.6.2")
     implementation("org.jsoup:jsoup:1.7.2")
+    implementation("no.tornado:tornadofx-controlsfx:0.1")
 }
 
 tasks {

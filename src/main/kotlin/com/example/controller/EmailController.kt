@@ -4,10 +4,15 @@ import com.example.datamodels.MessageUi
 import com.example.utils.MessageContentReader
 import javafx.beans.property.BooleanProperty
 import tornadofx.*
+import java.io.File
 import java.util.*
+import javax.activation.DataHandler
+import javax.activation.FileDataSource
 import javax.mail.*
 import javax.mail.internet.InternetAddress
+import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
+import javax.mail.internet.MimeMultipart
 import javax.mail.search.AndTerm
 import javax.mail.search.FlagTerm
 import javax.mail.search.SearchTerm
@@ -57,7 +62,7 @@ class EmailController: Controller() {
     fun readMessages() {
         inbox?.open(Folder.READ_ONLY)
 
-        val messages = inbox?.getMessages(1, 30) ?: emptyArray()
+        val messages = inbox?.search(FlagTerm(Flags(Flags.Flag.SEEN), false))?.take(30) ?: emptyList()
         println(messages.size)
         val uiMessages = messages.map {
             MessageUi(
@@ -67,23 +72,40 @@ class EmailController: Controller() {
                 it
             )
         }
-        println(uiMessages)
+
         messagesList.addAll(uiMessages)
     }
 
-    fun sendMessage(email: String, subject: String, content: String) {
+    fun sendMessage(email: String, subject: String, content: String, attachments: List<File>) {
         println("$email $subject $content")
         val message = MimeMessage(sessionAuth).apply {
             setFrom(InternetAddress(this@EmailController.email))
             addRecipient(Message.RecipientType.TO, InternetAddress(email))
             setSubject(subject, )
-            setText(content)
             sentDate = Date()
         }
+
+        val multipart = MimeMultipart().apply { MimeBodyPart().apply { setText(content) } }
+
+        if (attachments.isNotEmpty()) {
+            attachments.forEach { file ->
+                multipart.addBodyPart(createFileBodyPart(file))
+            }
+        }
+
+        message.setContent(multipart)
+
         sessionAuth.transport.apply {
             connect()
             sendMessage(message, arrayOf(InternetAddress(email)))
             close()
+        }
+    }
+
+    private fun createFileBodyPart(file: File): MimeBodyPart {
+        return MimeBodyPart().apply {
+            dataHandler = DataHandler(FileDataSource(file))
+            fileName = file.absolutePath
         }
     }
 

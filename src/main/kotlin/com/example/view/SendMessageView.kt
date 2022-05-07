@@ -4,14 +4,16 @@ import com.example.controller.EmailController
 import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Pos
 import javafx.scene.Parent
+import javafx.stage.FileChooser
 import tornadofx.*
+import java.io.File
 
 class SendMessageView: View("SendMessageView") {
     override val root = vbox()
     private val userObservable = SimpleStringProperty()
     private val themeObservable = SimpleStringProperty()
     private val messageObservable = SimpleStringProperty()
-    private val attachmentsObservable = SimpleStringProperty()
+    private val attachmentsObservable = mutableListOf<File>().toProperty()
     private val controller: EmailController by inject()
 
     init {
@@ -36,8 +38,17 @@ class SendMessageView: View("SendMessageView") {
             }
             hbox {
                 text("Вложения")
-                textfield()
-                button("...")
+                textfield() {
+                    attachmentsObservable.addListener { observable, oldValue, newValue ->
+                        text = newValue.joinToString(separator = ", ") { it.name }
+                    }
+                }
+                button("...") {
+                    onLeftClick {
+                        attachmentsObservable.value = chooseFile(filters = emptyArray()).toMutableList()
+                    }
+                }
+
             }
             button("Отправить") {
                 useMaxSize = true
@@ -47,7 +58,8 @@ class SendMessageView: View("SendMessageView") {
                         controller.sendMessage(
                             email = userObservable.value,
                             subject = themeObservable.value,
-                            content = messageObservable.value
+                            content = messageObservable.value,
+                            attachments = attachmentsObservable.value
                         )
                     }
                 }
