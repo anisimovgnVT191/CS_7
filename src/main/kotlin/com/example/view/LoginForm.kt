@@ -38,6 +38,7 @@ class LoginForm : View() {
                                 controller.login(emailProperty.value, passwordProperty.value)
                             }.ui {
                                 if (controller.isAuthorized.value) {
+                                    controller.shouldFetchMessages.value = true
                                     close()
                                 } else {
                                     alert(

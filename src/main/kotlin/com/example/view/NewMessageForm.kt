@@ -19,6 +19,7 @@ class NewMessageForm : View() {
 
     init {
         with(root) {
+            closeable.not()
             title = "Новое сообшение"
             fieldset {
                 field("Получатель", Orientation.HORIZONTAL) {
@@ -39,10 +40,15 @@ class NewMessageForm : View() {
                 }
 
                 field("Вложения", Orientation.HORIZONTAL) {
-                    textfield()
+                    textfield {
+                        attachmentsProperty.addListener { observable, oldValue, newValue ->
+                            text = newValue.joinToString(separator = ", ") { it.name }
+                        }
+                    }
                     button("...") {
                         onLeftClick {
-                            attachmentsProperty.value = chooseFile(filters = emptyArray()).toMutableList()
+                            attachmentsProperty.value =
+                                chooseFile(filters = emptyArray(), mode = FileChooserMode.Multi).toMutableList()
                         }
                     }
                 }
@@ -59,7 +65,7 @@ class NewMessageForm : View() {
                                 attachments = attachmentsProperty.value
                             )
                         }.ui {
-
+                            close()
                         }
                     }
                 }

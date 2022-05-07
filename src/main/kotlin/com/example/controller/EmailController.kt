@@ -25,6 +25,7 @@ class EmailController: Controller() {
 
     val messagesList = mutableListOf<MessageUi>().asObservable()
     val isAuthorized = false.toProperty()
+    val shouldFetchMessages = false.toProperty()
 
     private lateinit var email: String
     private lateinit var password: String
@@ -54,20 +55,16 @@ class EmailController: Controller() {
         }
     }
 
-    fun freeResources() {
-        pop3Store.close()
-        inbox?.close()
-    }
-
     fun readMessages() {
-        inbox?.open(Folder.READ_ONLY)
+        inbox?.open(Folder.READ_ONLY) ?: return
+        val messageCount = inbox?.messageCount ?: return
 
-        val messages = inbox?.search(FlagTerm(Flags(Flags.Flag.SEEN), false))?.take(30) ?: emptyList()
+        val messages = inbox?.getMessages(messageCount - MAX_MESSAGE_FETCH_COUNT + 1, messageCount) ?: emptyArray()
         println(messages.size)
         val uiMessages = messages.map {
             MessageUi(
                 it.sentDate.toString(),
-                it.from[0].toString(),
+                (it.from[0] as InternetAddress).personal,
                 MessageContentReader.readContent(it),
                 it
             )
@@ -85,7 +82,7 @@ class EmailController: Controller() {
             sentDate = Date()
         }
 
-        val multipart = MimeMultipart().apply { MimeBodyPart().apply { setText(content) } }
+        val multipart = MimeMultipart().apply { addBodyPart(MimeBodyPart().apply { setText(content) }) }
 
         if (attachments.isNotEmpty()) {
             attachments.forEach { file ->
@@ -138,5 +135,7 @@ class EmailController: Controller() {
         private const val SMTP_HOST = "smtp.gmail.com"
         private const val SMTP_PORT = "465"
         private const val SMTP_SOCKET_FACTORY = "javax.net.ssl.SSLSocketFactory"
+
+        private const val MAX_MESSAGE_FETCH_COUNT = 30
     }
 }

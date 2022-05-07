@@ -11,6 +11,14 @@ class AppView : View() {
 
     init {
         with(root) {
+            controller.shouldFetchMessages.addListener { _, _, isLogged ->
+                if (isLogged) {
+                    runAsyncWithOverlay {
+                        controller.readMessages()
+                    }
+                }
+            }
+
             top = menubar {
                 menu("Действия") {
                     item("Войти") {
@@ -35,6 +43,8 @@ class AppView : View() {
                     readonlyColumn("Содержание", MessageUi::content)
 
                     smartResize()
+
+
                 }
             }
         }
