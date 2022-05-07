@@ -1,9 +1,6 @@
 package com.example
 
-import com.example.controller.EmailController
 import com.example.view.AppView
-import com.example.view.MainView
-import com.example.view.SendMessageView
 import javafx.stage.Stage
 import tornadofx.*
 

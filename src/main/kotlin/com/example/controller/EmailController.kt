@@ -2,7 +2,6 @@ package com.example.controller
 
 import com.example.datamodels.MessageUi
 import com.example.utils.MessageContentReader
-import javafx.beans.property.BooleanProperty
 import tornadofx.*
 import java.io.File
 import java.util.*
@@ -13,14 +12,10 @@ import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
-import javax.mail.search.AndTerm
-import javax.mail.search.FlagTerm
-import javax.mail.search.SearchTerm
 
-class EmailController: Controller() {
+class EmailController : Controller() {
     private val pop3Store: Store
     private var inbox: Folder? = null
-    private val searchTerm: SearchTerm
     private lateinit var sessionAuth: Session
 
     val messagesList = mutableListOf<MessageUi>().asObservable()
@@ -34,11 +29,6 @@ class EmailController: Controller() {
         val properties = System.getProperties()
         val session = Session.getDefaultInstance(properties)
         pop3Store = session.getStore(POP3S_PROTOCOL)
-
-        val unseenFlagTerm = FlagTerm(Flags(Flags.Flag.SEEN), false)
-        val lastTwoDaysTerm = FlagTerm(Flags(Flags.Flag.RECENT), true)
-        searchTerm = AndTerm(unseenFlagTerm, lastTwoDaysTerm)
-
     }
 
     fun login(email: String, password: String) {
@@ -78,7 +68,7 @@ class EmailController: Controller() {
         val message = MimeMessage(sessionAuth).apply {
             setFrom(InternetAddress(this@EmailController.email))
             addRecipient(Message.RecipientType.TO, InternetAddress(email))
-            setSubject(subject, )
+            setSubject(subject)
             sentDate = Date()
         }
 
@@ -120,6 +110,7 @@ class EmailController: Controller() {
             }
         })
     }
+
     companion object {
         private const val DEFAULT_HOST = "pop.gmail.com"
         private const val DEFAULT_PORT = 995
